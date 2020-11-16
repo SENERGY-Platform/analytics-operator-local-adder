@@ -15,7 +15,8 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: analytics-operator-local-adder 
+  IMAGE_NAME: analytics-operator-local-adder
+  IMAGE_ID: docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME:latest
 
 jobs:
   # Push image to GitHub Packages.
@@ -41,10 +42,12 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v2
+        run: |
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
           tags: |
-            docker.pkg.github.com/${{ github.repository }}/smartenergyplatform/$IMAGE_NAME:latest
+            $IMAGE_ID
