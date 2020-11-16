@@ -1,4 +1,5 @@
 FROM python:3.7-alpine
+LABEL org.opencontainers.image.source https://github.com/SENERGY-Platform/analytics-operator-local-adder
 
 ADD . /opt/app
 WORKDIR /opt/app
