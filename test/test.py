@@ -30,7 +30,7 @@ class TestMainMethods(unittest.TestCase):
         input2.current_topic = "test2"
         output = adder.process([input1, input2])
         self.assertTrue(output.send)
-        self.assertEqual({'sum', 'message_id', 'timestamp'}, output.values.keys())
+        self.assertEqual({'sum', 'message_no', 'message_id', 'timestamp'}, output.values.keys())
         input1.current_value = 7
         input1.current_topic = "test1"
         input2.current_value = 4
