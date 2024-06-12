@@ -14,7 +14,6 @@
 import typing
 import uuid
 from datetime import datetime
-
 from senergy_local_analytics import App, Input, Output, Config
 
 
