@@ -1,16 +1,41 @@
 name: '[builder] Docker'
 
+# main builds :latest as before plus :vX.Y.Z; a release/vN branch keeps an older major
+# alive and builds only its :vN.x.y on ghcr. The git tag is pushed after the image, so a
+# failed build never consumes a version.
 on:
   push:
     branches:
       - main
+      - 'release/v*'
 jobs:
   multi:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       -
         name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      -
+        name: Version
+        id: version
+        run: echo "tag=$(.github/scripts/next-version.sh "$GITHUB_REF_NAME")" >> "$GITHUB_OUTPUT"
+      -
+        name: Image tags
+        id: tags
+        run: |
+          {
+            echo 'list<<EOF'
+            echo "ghcr.io/senergy-platform/analytics-operator-local-adder:${{ steps.version.outputs.tag }}"
+            if [ "$GITHUB_REF_NAME" = 'main' ]; then
+              echo 'smartenergyplatform/analytics-operator-local-adder:latest'
+              echo 'ghcr.io/senergy-platform/analytics-operator-local-adder:latest'
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -38,6 +63,12 @@ jobs:
           file: ./Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
-          tags: |
-            smartenergyplatform/analytics-operator-local-adder:latest
-            ghcr.io/senergy-platform/analytics-operator-local-adder:latest
+          tags: ${{ steps.tags.outputs.list }}
+      -
+        name: Push version tag
+        run: |
+          tag='${{ steps.version.outputs.tag }}'
+          if [ -z "$(git tag --points-at HEAD --list "$tag")" ]; then
+            git tag "$tag"
+            git push origin "$tag"
+          fi
